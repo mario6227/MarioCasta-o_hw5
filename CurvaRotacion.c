@@ -106,6 +106,21 @@ int main(void){
     }
       
   }
+
+  //Se determina la posicion de maxima likelihood
+  double max = l_walk[0];
+  int index = 0;
+  for(i=1; i<iter; i++){
+    if(l_walk[i] >= max){
+      max = l_walk[i];
+      index = i;
+    }
+  }
+
+  //Se imprimen los valores optimos con el indice de max likelihood
+  FILE * sol; //Archivo de velocidades observadas
+  sol = fopen("parametros.txt","w");
+  fprintf(sol, "%f %f %f", Mb_walk[index], Md_walk[index], Mh_walk[index]);
     
   return 0;
 }
