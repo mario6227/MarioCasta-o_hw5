@@ -44,14 +44,15 @@ double * v_modelo(double R[n], double Mb, double Md, double Mh){
 int main(void){
 
   int i;
+  int iter = 20000; //Numero de iteraciones a realizar
   
   //inicializacion de vectores (observados, 'walks' e init)
   double * r_obs = malloc(n*sizeof(double));
   double * v_obs = malloc(n*sizeof(double));
-  double * Mb_walk = malloc(n*sizeof(double));
-  double * Md_walk = malloc(n*sizeof(double));
-  double * Mh_walk = malloc(n*sizeof(double));
-  double * l_walk = malloc(n*sizeof(double));
+  double * Mb_walk = malloc(iter*sizeof(double));
+  double * Md_walk = malloc(iter*sizeof(double));
+  double * Mh_walk = malloc(iter*sizeof(double));
+  double * l_walk = malloc(iter*sizeof(double));
   double * v_init = malloc(n*sizeof(double));
   double * v_prime = malloc(n*sizeof(double));
   
@@ -72,8 +73,38 @@ int main(void){
   v_init = v_modelo(r_obs, Mb_walk[0], Md_walk[0], Mh_walk[0]);
   l_walk[0] = likelihood(v_obs, v_init);
 
-  int iter = 20000; //Numero de iteraciones a realizar
   for(i=0; i<iter; i++){
+    double Mb_prime = randnormal(Mb_walk[i], 0.1);
+    double Md_prime = randnormal(Md_walk[i], 0.1);
+    double Mh_prime = randnormal(Mh_walk[i], 0.1);
+
+    v_init = v_modelo(r_obs, Mb_walk[i], Md_walk[i], Mh_walk[i]);
+    v_prime = v_modelo(r_obs, Mb_prime, Md_prime, Mh_prime);
+
+    double l_init = likelihood(v_obs, v_init);
+    double l_prime = likelihood(v_obs, v_prime);
+
+    double alpha = l_prime / l_init;
+    if(alpha >= 1.0){
+      Mb_walk[i+1] = Mb_prime;
+      Md_walk[i+1] = Md_prime;
+      Mh_walk[i+1] = Mh_prime;
+      l_walk[i+1] = l_prime;
+    } else {
+      double beta = drand48();
+      if(beta <= alpha){
+	Mb_walk[i+1] = Mb_prime;
+	Md_walk[i+1] = Md_prime;
+	Mh_walk[i+1] = Mh_prime;
+	l_walk[i+1] = l_prime;
+      } else {
+	Mb_walk[i+1] = Mb_walk[i];
+	Md_walk[i+1] = Md_walk[i];
+	Mh_walk[i+1] = Mh_walk[i];
+	l_walk[i+1] = l_walk[i];
+      }
+    }
+      
   }
     
   return 0;
