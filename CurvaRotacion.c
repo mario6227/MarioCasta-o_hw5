@@ -5,11 +5,11 @@
 #define PI 3.14159265359
 
 //Definicion de funciones, f_modelo, randnormal y de 'likelihood'
-double likelihood(double obs[n], double model[n]){
-  double suma = 0;
+long double likelihood(double obs[n], double model[n]){
+  double suma = 0.0;
   int i;
   for(i=0;i<n;i++){
-    suma = suma + pow((obs[i]-model[i]),2);
+    suma = suma + pow((obs[i]-model[i]) / 100.0,2.0);
   }
   return exp(-(1.0/2.0)*suma);
 }
@@ -32,9 +32,9 @@ double * v_modelo(double R[n], double Mb, double Md, double Mh){
 
   int i;
   for(i=0; i<n; i++){
-    double pb = sqrt(Mb) * R[i] / pow((pow(R[i],2)+pow(bb,2)), 0.75);
-    double pd = sqrt(Md) * R[i] / pow((pow(R[i],2)+pow(bd+ad,2)), 0.75);
-    double ph = sqrt(Mh) / pow((pow(R[i],2)+pow(ah,2)), 0.25);
+    double pb = sqrt(Mb) * R[i] / pow((pow(R[i],2.0)+pow(bb,2.0)), 0.75);
+    double pd = sqrt(Md) * R[i] / pow((pow(R[i],2.0)+pow(bd+ad,2.0)), 0.75);
+    double ph = sqrt(Mh) / pow((pow(R[i],2.0)+pow(ah,2.0)), 0.25);
     v_m[i] = pb + pd + ph;
   }
     
@@ -44,7 +44,7 @@ double * v_modelo(double R[n], double Mb, double Md, double Mh){
 int main(void){
 
   int i;
-  int iter = 20000; //Numero de iteraciones a realizar
+  int iter = 50000; //Numero de iteraciones a realizar
   
   //inicializacion de vectores (observados, 'walks' e init)
   double * r_obs = malloc(n*sizeof(double));
@@ -58,10 +58,13 @@ int main(void){
   
   FILE * data; //Archivo de velocidades observadas
   data = fopen("RadialVelocities.dat","r");
+
+  FILE * sol; //Archivo de velocidades observadas
+  sol = fopen("parametros.txt","w");
   
   //Lectura de los valores observados
   fscanf(data, "%*[^\n]");  // Read and discard a line
-  for (i=0; i<n; i++) //Se inicializa en 1 para saltar titulos de series
+  for (i=0; i<n; i++) 
     {
       fscanf(data,"%lf %lf\n", &r_obs[i],&v_obs[i]);
     }
@@ -74,17 +77,19 @@ int main(void){
   l_walk[0] = likelihood(v_obs, v_init);
 
   for(i=0; i<iter; i++){
-    double Mb_prime = randnormal(Mb_walk[i], 0.1);
-    double Md_prime = randnormal(Md_walk[i], 0.1);
-    double Mh_prime = randnormal(Mh_walk[i], 0.1);
+    //La desviacion estandar mas apropiada para cada distribucion se determino de manera empirica
+    double Mb_prime = randnormal(Mb_walk[i], 4.0);
+    double Md_prime = randnormal(Md_walk[i], 400.0);
+    double Mh_prime = randnormal(Mh_walk[i], 400.0);
 
     v_init = v_modelo(r_obs, Mb_walk[i], Md_walk[i], Mh_walk[i]);
     v_prime = v_modelo(r_obs, Mb_prime, Md_prime, Mh_prime);
 
-    double l_init = likelihood(v_obs, v_init);
-    double l_prime = likelihood(v_obs, v_prime);
+    long double l_init = likelihood(v_obs, v_init);
+    long double l_prime = likelihood(v_obs, v_prime);
 
     double alpha = l_prime / l_init;
+    //fprintf(sol, "%f \n", l_walk[i]);
     if(alpha >= 1.0){
       Mb_walk[i+1] = Mb_prime;
       Md_walk[i+1] = Md_prime;
@@ -118,8 +123,7 @@ int main(void){
   }
 
   //Se imprimen los valores optimos con el indice de max likelihood
-  FILE * sol; //Archivo de velocidades observadas
-  sol = fopen("parametros.txt","w");
+  
   fprintf(sol, "%f %f %f", Mb_walk[index], Md_walk[index], Mh_walk[index]);
     
   return 0;
