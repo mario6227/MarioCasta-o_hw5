@@ -122,9 +122,13 @@ int main(void){
     }
   }
 
-  //Se imprimen los valores optimos con el indice de max likelihood
-  
+  //Documento que se leera en python
   fprintf(sol, "%f %f %f", Mb_walk[index], Md_walk[index], Mh_walk[index]);
+
+  //Se imprimen los resultados en consola
+  printf("Mb: %lf\n", Mb_walk[index]);
+  printf("Md: %lf\n", Md_walk[index]);
+  printf("Mh: %lf\n", Mh_walk[index]);
     
   return 0;
 }
