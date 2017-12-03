@@ -22,10 +22,12 @@ ph = np.sqrt(Mh) / (r**2 + ah**2)**(1.0/4.0)
 
 vel = pb + pd + ph
 
+fig = plt.figure()
 plt.scatter(r,v, s = 10, c = 'green', alpha = 0.3, label = 'observaciones')
 plt.plot(r, vel, c = 'red', label = 'modelo')
 plt.xlabel('Radio (kpc)')
 plt.ylabel('Velocidad (km/s)')
 plt.title('Velocidad vs. Radio (galaxia)')
 plt.legend(loc = 0)
+fig.text(0.5, 0.15,'Mb = ' + str(Mb) + ', Md = ' + str(Md) + ', Mh = ' + str(Mh),ha='center')
 plt.savefig('Velocidades.pdf')
